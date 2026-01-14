@@ -1,0 +1,42 @@
+{
+  "testName": "AI Control Hub - Initial Test",
+  "timestamp": "2026-01-14T18:52:00.000Z",
+  "status": "SUCCESS",
+  "results": {
+    "backend": {
+      "status": "running",
+      "port": 3001,
+      "endpoints": [
+        "/api/status",
+        "/api/me",
+        "/api/test-openai",
+        "/api/openai/advanced-test",
+        "/api/monitoring/stats",
+        "/api/automation/daily",
+        "/api/agents"
+      ]
+    },
+    "frontend": {
+      "status": "running",
+      "port": 3000,
+      "framework": "React + Vite"
+    },
+    "integrations": {
+      "openai": {
+        "configured": false,
+        "error": "OPENAI_API_KEY לא הוגדר"
+      },
+      "github": {
+        "configured": false,
+        "error": "GITHUB_TOKEN לא הוגדר",
+        "testRepo": "yanivmizrachiy/ai-control-hub-test"
+      }
+    }
+  },
+  "nextSteps": [
+    "הגדרת OPENAI_API_KEY במשתני סביבה",
+    "הגדרת GITHUB_TOKEN במשתני סביבה",
+    "יצירת סוכן AI ראשון",
+    "הרצת בדיקה אוטומטית מלאה"
+  ]
+}
