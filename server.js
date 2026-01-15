@@ -36,7 +36,7 @@ class GitHubService {
     }
   }
 
-  async createFile(path, content, message) {
+  async createFile(path, content, message) , sha = null) {
     if (!this.octokit) throw new Error('GitHub not configured');
     
     const owner = process.env.GITHUB_OWNER;
@@ -49,6 +49,8 @@ class GitHubService {
         path,
         message,
         content: Buffer.from(content).toString('base64'),
+          ...(sha && { sha })
+        })
       });
       return response.data;
     } catch (error) {
@@ -82,6 +84,7 @@ Created automatically by AI Control Hub
 `;
 
   const result = await githubService.createFile(
+    null  // No SHA needed for initial creation
     filename,
     content,
     `📊 Automated daily report - ${date}`
