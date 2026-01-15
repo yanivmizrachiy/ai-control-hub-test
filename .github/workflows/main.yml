@@ -1,78 +1,58 @@
-name: AI Control Hub - Daily Report
+name: AI Control Hub - Agent Server
 
 on:
   schedule:
-    - cron: '0 0 * * *'  # Run daily at midnight UTC
+    - cron: '0 * * * *'  # Run every hour
   workflow_dispatch:  # Allow manual trigger
 
 jobs:
-  generate-report:
+  run-agent-server:
     runs-on: ubuntu-latest
     
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        
-      - name: Create reports directory
-        run: mkdir -p reports
-        
-      - name: Generate daily report
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      
+      - name: Install dependencies
+        run: npm install
+      
+      - name: Run agent via server API
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_OWNER: yanivmizrachiy
+          GITHUB_REPO: ai-control-hub-test
         run: |
-          DATE=$(date +%Y-%m-%d)
-          cat > reports/${DATE}.md << 'EOF'
-          # AI Control Hub - Daily Report
+          # Start server in background
+          node server.js &
+          SERVER_PID=$!
           
-          **Date:** ${DATE}
-          **Generated:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          # Wait for server to be ready
+          sleep 5
           
-          ## System Status
+          # Call the agent endpoint
+          RESPONSE=$(curl -s -X POST http://localhost:3000/api/run-agent)
           
-          - ✅ Repository Active
-          - ✅ GitHub Actions Operational
-          - ✅ Automated Report Generation Working
+          # Kill server
+          kill $SERVER_PID
           
-          ## Metrics
-          
-          - **Commits Today:** $(git log --since="yesterday" --oneline | wc -l)
-          - **Total Files:** $(find . -type f ! -path "./.git/*" | wc -l)
-          - **Repository Size:** $(du -sh . | cut -f1)
-          
-          ## Test Results
-          
-          ```json
-          {
-            "testName": "AI Control Hub - Automated Test",
-            "timestamp": "$(date -u +"%Y-%m-%dT%H:%M:%S.000Z")",
-            "status": "SUCCESS",
-            "agent": {
-              "name": "GitHub Actions Agent",
-              "type": "automated",
-              "capabilities": ["report-generation", "git-operations", "scheduled-execution"]
-            },
-            "results": {
-              "automation": "PASS",
-              "file_creation": "PASS",
-              "git_commit": "PASS"
-            }
-          }
-          ```
-          
-          ## Next Steps
-          
-          - [x] Automated report generation
-          - [x] GitHub commit integration
-          - [ ] OpenAI integration (pending API key)
-          - [ ] Backend server integration
-          
-          ---
-          
-          *Generated automatically by GitHub Actions*
-          EOF
-          
-      - name: Commit and push report
+          # Check if successful
+          echo "Response: $RESPONSE"
+          if echo "$RESPONSE" | grep -q '"success":true'; then
+            echo "✅ Agent executed successfully"
+          else
+            echo "❌ Agent execution failed"
+            exit 1
+          fi
+      
+      - name: Commit and push if changes
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add reports/
-          git commit -m "📊 Automated daily report - $(date +%Y-%m-%d)" || echo "No changes to commit"
+          git diff --staged --quiet || git commit -m "🤖 Automated agent execution - $(date +%Y-%m-%d-%H:%M)"
           git push || echo "Nothing to push"
