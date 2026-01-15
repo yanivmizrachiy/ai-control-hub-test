@@ -36,7 +36,7 @@ class GitHubService {
     }
   }
 
-  async createFile(path, content, message) , sha = null) {
+  async createFile(path, content, message, sha = null) {   if (!this.octokit) throw new Error('GitHub not configured');
     if (!this.octokit) throw new Error('GitHub not configured');
     
     const owner = process.env.GITHUB_OWNER;
