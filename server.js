@@ -64,7 +64,20 @@ const githubService = new GitHubService();
 // ============================================
 // 3️⃣ First Agent - Simple Report Generator
 // ============================================
-async function runFirstAgent() {
+async function runFirstAgent() 
+  // Try to get existing file SHA first
+  let existingSha = null;
+  try {
+    const existing = await githubService.octokit.rest.repos.getContent({
+      owner: process.env.GITHUB_OWNER,
+      repo: process.env.GITHUB_REPO,
+      path: filename
+    });
+    existingSha = existing.data.sha;
+  } catch (error) {
+    // File doesn't exist, that's OK - we'll create it
+  }
+  
   const date = new Date().toISOString().split('T')[0];
   const filename = `reports/${date}.md`;
   
@@ -84,8 +97,7 @@ Created automatically by AI Control Hub
 `;
 
   const result = await githubService.createFile(
-    null  // No SHA needed for initial creation
-    filename,
+    existingSha  // Use SHA if file exists, null if creating ne,    filename,
     content,
     `📊 Automated daily report - ${date}`
   );
